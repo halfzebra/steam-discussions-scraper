@@ -34,10 +34,10 @@ function requestTopics(appId, subForumPath, pageNumber) {
         const $ = cheerio.load(response);
         const topics = []
 
-        $('.forum_topics_container .forum_topic').each((_, $topic) => {
+        $('.forum_topics_container .forum_topic').each((_, topicHtml) => {
           topics.push({
-            topicId: $($topic).attr('data-gidforumtopic'),
-            title: $($topic).find('.forum_topic_name').text().trim()
+            topicId: $(topicHtml).attr('data-gidforumtopic'),
+            title: $(topicHtml).find('.forum_topic_name').text().trim()
           })
         })
 
@@ -80,10 +80,21 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
     Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
       .then(response => {
         const $ = cheerio.load(response)
-        const comments = $('.commentthread_comment')
+        const comments = [];
+
+        $('.commentthread_comment').each((index, commentHtml) => {
+          const $comment = $(commentHtml);
+          comments.push({
+            author: $comment.find('.commentthread_author_link').attr('href'),
+            html: $comment.find('.commentthread_comment_text').html()
+          })
+        });
+
         const op = $('.forum_op')
 
-        console.log(op.html());
+        return {
+          comments
+        }
       })
   )
 }
