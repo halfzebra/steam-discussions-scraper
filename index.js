@@ -1,4 +1,4 @@
-const request = require('request-promise');
+const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
@@ -27,14 +27,15 @@ function requestTopics(appId, subForumPath, pageNumber) {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')))
-      // request({
-      //   url, headers
+    Promise.resolve({ data: fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')) })
+
+      // axios.get(url, {
+      //   headers
       // })
-      .then(response => {
+      .then(({ data }) => {
         const offset = (pageNumber - 1) * 50
         const topics = []
-        const $ = cheerio.load(response);
+        const $ = cheerio.load(data);
 
         $('.forum_topics_container .forum_topic').each((_, topicHtml) => {
           topics.push({
@@ -79,13 +80,12 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    // request({
-    //   url,
+    // axios.get(url, {
     //   headers
     // })
-    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
-      .then(response => {
-        const $ = cheerio.load(response)
+    Promise.resolve({ data: fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8') })
+      .then(({ data }) => {
+        const $ = cheerio.load(data)
 
         const comments = [];
         $('.commentthread_comment').each((index, commentHtml) => {
