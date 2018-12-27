@@ -27,10 +27,10 @@ function requestTopics(appId, subForumPath, pageNumber) {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    // Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')))
-    request({
-      url, headers
-    })
+    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')))
+      // request({
+      //   url, headers
+      // })
       .then(response => {
         const offset = (pageNumber - 1) * 50
         const topics = []
@@ -79,13 +79,14 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    request({
-      url,
-      headers
-    })
-    // Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
+    // request({
+    //   url,
+    //   headers
+    // })
+    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
       .then(response => {
         const $ = cheerio.load(response)
+
         const comments = [];
         $('.commentthread_comment').each((index, commentHtml) => {
           const $comment = $(commentHtml);
@@ -96,16 +97,32 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
         });
 
         const count = comments.length;
+
+        // total
         const totalContainer = $($('.forum_paging_summary').get(0)).find('span').get(2);
         const total = parseInt($(totalContainer).text());
 
-        // const op = $('.forum_op')
+        // op
+        const $op = $('.forum_op')
+        const timestamp = parseInt($op.find('.date').attr('data-timestamp'));
+        const date = new Date(timestamp * 1000);
+        const title = $op.find('.topic').text().trim();
+        const html = $op.find('.content').html();
+        const author = $op.find('.forum_op_author').attr('href')
+
+        const op = {
+          author,
+          title,
+          date,
+          html
+        }
 
         return {
-          total,
-          offset,
-          count,
-          comments
+          op
+          // total,
+          // offset,
+          // count,
+          // comments
         }
       })
   )
