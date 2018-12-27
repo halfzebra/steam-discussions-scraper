@@ -118,11 +118,11 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
         }
 
         return {
-          op
-          // total,
-          // offset,
-          // count,
-          // comments
+          op,
+          total,
+          offset,
+          count,
+          comments
         }
       })
   )
