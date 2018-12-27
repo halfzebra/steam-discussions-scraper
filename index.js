@@ -81,7 +81,6 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
       .then(response => {
         const $ = cheerio.load(response)
         const comments = [];
-
         $('.commentthread_comment').each((index, commentHtml) => {
           const $comment = $(commentHtml);
           comments.push({
@@ -90,9 +89,13 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
           })
         });
 
+        const totalContainer = $($('.forum_paging_summary').get(0)).find('span').get(2);
+        const total = $(totalContainer).text();
+
         const op = $('.forum_op')
 
         return {
+          total
           comments
         }
       })
