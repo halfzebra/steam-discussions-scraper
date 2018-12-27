@@ -21,18 +21,20 @@ const path = require('path');
 // }
 
 function requestTopics(appId, subForumPath, pageNumber) {
+
   const url = 'https://steamcommunity.com/app/' + appId + subForumPath + '/?fp=' + pageNumber;
   const headers = {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')))
-    // request({
-    //   url, headers
-    // })
+    // Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/topics.html')))
+    request({
+      url, headers
+    })
       .then(response => {
-        const $ = cheerio.load(response);
+        const offset = (pageNumber - 1) * 50
         const topics = []
+        const $ = cheerio.load(response);
 
         $('.forum_topics_container .forum_topic').each((_, topicHtml) => {
           topics.push({
@@ -41,11 +43,15 @@ function requestTopics(appId, subForumPath, pageNumber) {
           })
         })
 
+
+        const count = topics.length;
         const totalContainer = $('.forum_paging_header span').get(3);
         const total = $(totalContainer).text();
 
         return {
           total,
+          offset,
+          count,
           topics
         }
       })
@@ -67,17 +73,17 @@ function requestTopics(appId, subForumPath, pageNumber) {
 // }
 
 function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
+  const offset = (pageNumber - 1) * 50
   const url = 'https://steamcommunity.com/app/' + appId + subForumPath + '/' + topicId + '/?ctp=' + pageNumber;
-
   const headers = {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    // request({
-    //   url,
-    //   headers
-    // })
-    Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
+    request({
+      url,
+      headers
+    })
+    // Promise.resolve(fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8'))
       .then(response => {
         const $ = cheerio.load(response)
         const comments = [];
@@ -89,13 +95,16 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
           })
         });
 
+        const count = comments.length;
         const totalContainer = $($('.forum_paging_summary').get(0)).find('span').get(2);
-        const total = $(totalContainer).text();
+        const total = parseInt($(totalContainer).text());
 
-        const op = $('.forum_op')
+        // const op = $('.forum_op')
 
         return {
-          total
+          total,
+          offset,
+          count,
           comments
         }
       })
