@@ -63,12 +63,17 @@ function requestTopics(appId, subForumPath, pageNumber) {
 //
 // {
 //     op: {
-//       // some info about the op post
+//      author: string;
+//      title: string;
+//      date: string;
+//      html: string;
 //     };
 //     offset: number;
 //     count: number;
 //     comments: []{
-//      author: // some info about the author
+//      author: string;
+//      date: string;
+//      hasGame: bool;
 //      text: string;
 //     };
 // }
@@ -80,19 +85,23 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
     Cookie: 'rgDiscussionPrefs=' + encodeURIComponent(JSON.stringify({ cTopicRepliesPerPage: 50, cTopicsPerPage: 50 }))
   }
   return (
-    // axios.get(url, {
-    //   headers
-    // })
-    Promise.resolve({ data: fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8') })
+    axios.get(url, {
+      headers
+    })
+    // Promise.resolve({ data: fs.readFileSync(path.resolve(__dirname, './fixture/comments.html'), 'utf8') })
       .then(({ data }) => {
         const $ = cheerio.load(data)
 
         const comments = [];
+
         $('.commentthread_comment').each((index, commentHtml) => {
           const $comment = $(commentHtml);
+          const timestamp = $comment.find('.commentthread_comment_timestamp').attr('data-timestamp');
           comments.push({
             author: $comment.find('.commentthread_author_link').attr('href'),
-            html: $comment.find('.commentthread_comment_text').html()
+            date: new Date(timestamp * 1000),
+            html: $comment.find('.commentthread_comment_text').html(),
+            hasGame: $comment.find('.commentthread_comment_author > img').length === 1
           })
         });
 
@@ -128,12 +137,36 @@ function requestTopicComments(appId, topicId, subForumPath, pageNumber) {
   )
 }
 
-requestTopics(711660, '/discussions/0', 1)
-  .then(data => {
-    const { topics } = data;
-    const { topicId } = topics[0];
+async function main() {
+  try {
+    // const { topics } = await requestTopics(711660, '/discussions/0', 1)
+    // console.log(topics);
+    // const { topicId } = topics[0];
 
-    return requestTopicComments(711660, topicId, '/discussions/0', 1)
-  })
-  .then(console.log)
-  .catch(console.log);
+    let page = 1
+    let done = false
+
+    let allComments = []
+
+    while (!done) {
+      const { total, comments } = await requestTopicComments(440, '1744480967012786259', '/discussions/0', page)
+      allComments.push(comments);
+
+      if (total > page * 50) {
+        page++
+      } else {
+        done = true;
+      }
+    }
+
+    fs.writeFileSync(path.resolve(__dirname, Date.now() + '.json'), JSON.stringify(allComments, null, 4))
+
+    console.log(allComments.length)
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+}
+
+
+main();
