@@ -3,7 +3,7 @@ const Sentiment = require('sentiment');
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 
-const {  scrapeTopicsInSubForum, scrapeCommentsInTopic } = require('../../index');
+const {  scrapeTopicsInSubForum, scrapeCommentsInTopic } = require('../../lib');
 
 const adapter = new FileSync(path.resolve(__dirname, 'db.json'))
 const db = low(adapter)
