@@ -8,7 +8,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "lowdb": "^1.0.0",
     "sentiment": "^5.0.1"
