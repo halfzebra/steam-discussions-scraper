@@ -2,6 +2,7 @@ const path = require('path');
 const Sentiment = require('sentiment');
 const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
+const ProgressBar = require('progress');
 
 const { scrapeTopicsInSubForum, scrapeCommentsInTopic } = require('../../lib');
 
@@ -21,17 +22,25 @@ async function main() {
 		console.log(`Scraping https://steamcommunity.com/app/${appId}${subForumPath}`);
 		console.log();
 
-		const topics = await scrapeTopicsInSubForum(appId, subForumPath);
+    const topics = await scrapeTopicsInSubForum(appId, subForumPath);
 
-		db.get('topics').push(...topics).write();
+    const { length } = topics;
+    let i = length;
+    const bar = new ProgressBar(':bar', { total: length });
 
-		console.log(topicsFlat);
-		process.exit(0);
+    db.get('topics').push(...topics).write();
 
-		topicsFlat.forEach(async (topic) => {
-			const comments = await scrapeCommentsInTopic(appId, subForumPath, topic.id);
-			db.get('comments').push(...comments).write();
-		});
+    while (i > 0) {
+      const comments = await scrapeCommentsInTopic(appId, subForumPath, topics[ length - i ].id);
+      db.get('comments').push(...comments).write();
+      bar.tick();
+      i--;
+    }
+
+    console.log()
+    console.log('Complete!');
+    console.log()
+    process.exit(0);
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
