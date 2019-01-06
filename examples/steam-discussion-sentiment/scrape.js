@@ -14,7 +14,6 @@ const sentiment = new Sentiment();
 
 async function main() {
 	try {
-		// https://steamcommunity.com/app/251830/discussions/
 		const appId = 251830;
 		const subForumPath = '/discussions/0';
 
@@ -24,9 +23,7 @@ async function main() {
 
 		const topics = await scrapeTopicsInSubForum(appId, subForumPath);
 
-		const topicsFlat = topics.reduce((acc, curr) => [ ...acc, ...curr ], []);
-
-		db.get('topics').push(...topicsFlat).write();
+		db.get('topics').push(...topics).write();
 
 		console.log(topicsFlat);
 		process.exit(0);
